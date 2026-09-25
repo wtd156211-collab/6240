@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>causalline · 因果排序视图</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header>
+  <h1>causalline</h1>
+  <p id="stats">加载中…</p>
+</header>
+<main>
+  <div id="timeline">
+    <div id="lane-labels"></div>
+    <div id="scroll"><svg id="canvas" xmlns="http://www.w3.org/2000/svg"></svg></div>
+  </div>
+  <section id="incomp-section">
+    <h2>不可比较对（前 20）</h2>
+    <ul id="incomp-list"></ul>
+  </section>
+</main>
+<script type="module" src="app.js"></script>
+</body>
+</html>

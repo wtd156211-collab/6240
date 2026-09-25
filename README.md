@@ -132,3 +132,19 @@ python -m causalline page   <事件> <json> [条数]
 
 1. 真实规模的输入与内存口径：`3×10^6` 条事件放不进仓库，要现场自备；`tracemalloc` 峰值从哪一点取，还没定。
 2. 其它：客户机器规格、页面配色与横向缩略、`web/data.json` 太大时要不要分片、退出码格式，都没定。
+
+## 8. 实现笔记（本次交付补记）
+
+- 代码结构：`causalline/core.py`（解析、存储、判定、全序 key）、`causalline/page.py`（页面 JSON）、
+  `causalline/__main__.py`（三个子命令）；`web/`（原生页面）；`tests/`（unittest）。
+- 全序的实现：不把时钟稠密展开，而是把每条时钟编成保序 bytes key——分量名逐字节取反
+  （名字越靠前编码越大）、名与计数之间用 `0xff` 分隔、计数用长度前缀变长编码、时钟与 id
+  之间用 `0x00` 分隔。key 的字节序即第 2 节的全序，排序就是一次 `list.sort()`，与输入行序无关。
+- 内存路径：`order` 流式读文件、只留 key 列表，不落地任何数组；`relate`/`page` 用 `id_filter`
+  只保留被查询/可见的事件。3×10^6 事件、1200 节点、约 1.2×10^7 分量的自建输入上：
+  `order` 约 4 秒、tracemalloc 峰值约 257 MiB；`relate` 3000 对约 3.5 秒、峰值约 2.5 MiB；
+  `page`（400 条）约 4 秒。tracemalloc 取值点：包住 `clock_keys_from_file` + 排序的整段，
+  起点在 `parse` 之前（即整条命令的全部 Python 分配）。
+- 退出码：成功 0；参数用法错误 2。日志（事件数、耗时）走 stderr。
+- `web/data.json` 不分片：默认 400 条时约 100 KiB 量级，直接 `fetch` 整个文件。
+  页面横向按 pos 线性排布、自然滚动，不做缩略。

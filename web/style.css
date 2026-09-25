@@ -1,0 +1,72 @@
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  font-family: "SF Mono", Consolas, "Courier New", monospace;
+  background: #14171c;
+  color: #d7dde5;
+}
+header {
+  padding: 14px 20px 10px;
+  border-bottom: 1px solid #2a313b;
+}
+header h1 { margin: 0 0 6px; font-size: 18px; letter-spacing: 1px; }
+header p { margin: 0; font-size: 13px; color: #9aa7b4; }
+#timeline {
+  display: flex;
+  align-items: stretch;
+  margin-top: 8px;
+}
+#lane-labels {
+  flex: 0 0 140px;
+  border-right: 1px solid #2a313b;
+  background: #14171c;
+  z-index: 2;
+}
+.lane-label {
+  height: 56px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 0 10px;
+  font-size: 12px;
+  border-bottom: 1px solid #1d232b;
+  overflow: hidden;
+}
+.lane-label .node { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.lane-label .first { color: #6b7684; font-size: 10px; }
+#scroll { flex: 1 1 auto; overflow-x: auto; }
+#canvas { display: block; }
+.lane-line { stroke: #232a33; stroke-width: 1; }
+.edge {
+  fill: none;
+  stroke: #4d8fd1;
+  stroke-width: 1.4;
+  opacity: 0.75;
+}
+.edge:hover { stroke: #8fc3ff; stroke-width: 2.4; opacity: 1; }
+.dot { stroke: #0d0f12; stroke-width: 1; cursor: default; }
+.dot:hover { stroke: #ffffff; }
+.pos-label {
+  font-size: 9px;
+  fill: #7c8896;
+  text-anchor: middle;
+  pointer-events: none;
+}
+#incomp-section { padding: 16px 20px 30px; }
+#incomp-section h2 { font-size: 14px; margin: 0 0 8px; }
+#incomp-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+#incomp-list li {
+  font-size: 12px;
+  background: #1d232b;
+  border: 1px solid #2a313b;
+  border-radius: 4px;
+  padding: 3px 8px;
+}
+#incomp-list li .sep { color: #b07cc6; padding: 0 4px; }
