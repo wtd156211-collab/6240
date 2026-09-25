@@ -1,0 +1,10 @@
+s01 s02 LT
+s01 s09 LT
+s02 s09 LT
+s03 s07 LT
+s04 s05 LT
+s05 s04 GT
+s06 s02 GT
+s07 s08 LT
+s08 s09 LT
+s09 s01 GT

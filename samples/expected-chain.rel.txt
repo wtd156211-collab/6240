@@ -1,0 +1,15 @@
+c01 c02 LT
+c01 c12 LT
+c02 c03 LT
+c02 c11 LT
+c03 c04 LT
+c04 c05 LT
+c04 c10 LT
+c05 c06 LT
+c06 c07 LT
+c07 c08 LT
+c08 c09 LT
+c09 c10 LT
+c10 c11 LT
+c11 c12 LT
+c12 c01 GT

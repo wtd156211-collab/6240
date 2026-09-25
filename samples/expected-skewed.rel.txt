@@ -1,0 +1,12 @@
+k01 k03 LT
+k01 k09 LT
+k02 k05 LT
+k03 k01 GT
+k04 k06 LT
+k05 k04 GT
+k06 k08 LT
+k07 k06 GT
+k07 k10 LT
+k08 k09 LT
+k09 k01 GT
+k10 k09 GT

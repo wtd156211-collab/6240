@@ -1,0 +1,6 @@
+q1 n-p-c 3000 n-p-c:1
+q2 n-p-a 3010 n-p-a:1
+q3 n-p-f 3020 n-p-f:1
+q4 n-p-b 3030 n-p-b:1
+q5 n-p-e 3040 n-p-e:1
+q6 n-p-d 3050 n-p-d:1
