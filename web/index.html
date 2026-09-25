@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="utf-8">
+<title>causalline 因果时间线</title>
+<style>
+  :root { color-scheme: light; }
+  body { font-family: system-ui, sans-serif; margin: 16px; color: #222; }
+  h1 { font-size: 18px; margin: 0 0 8px; }
+  #stats { margin: 8px 0 12px; font-size: 14px; display: flex; gap: 24px; }
+  #stats b { font-variant-numeric: tabular-nums; }
+  #wrap { overflow-x: auto; border: 1px solid #ddd; border-radius: 6px; }
+  svg { display: block; }
+  .lane-label { font-size: 12px; fill: #444; }
+  .lane-line { stroke: #e5e5e5; stroke-width: 1; }
+  .edge { stroke: #7aa7d9; stroke-width: 1.5; fill: none; opacity: .8; }
+  .dot { stroke: #fff; stroke-width: 1; cursor: default; }
+  .pos-label { font-size: 9px; fill: #666; text-anchor: middle; }
+  #incomp { margin-top: 12px; font-size: 13px; }
+  #incomp span { display: inline-block; background: #f4f4f4; border: 1px solid #ddd;
+                 border-radius: 4px; padding: 1px 6px; margin: 2px 4px 2px 0; }
+  #tip { position: fixed; pointer-events: none; background: #fff; border: 1px solid #bbb;
+         border-radius: 4px; padding: 4px 8px; font-size: 12px; display: none;
+         white-space: pre; box-shadow: 0 2px 6px rgba(0,0,0,.15); }
+</style>
+</head>
+<body>
+<h1>causalline 因果时间线</h1>
+<div id="stats"></div>
+<div id="wrap"></div>
+<div id="incomp"></div>
+<div id="tip"></div>
+<script type="module">
+const LANE_H = 46, LEFT = 110, RIGHT = 40, TOP = 28, MIN_DX = 26;
+const COLORS = ['#d1495b','#2e86ab','#4f9d69','#e8a13d','#7d5ba6','#c0653b','#3a7ca5','#8a8f3d'];
+
+const data = await (await fetch('data.json')).json();
+
+// ① 泳道：顺序同 lanes
+const laneY = new Map(data.lanes.map((l, i) => [l.node, TOP + i * LANE_H + LANE_H / 2]));
+const laneColor = new Map(data.lanes.map((l, i) => [l.node, COLORS[i % COLORS.length]]));
+
+// ② 事件横坐标：按 pos 从左到右
+const shown = data.shown;
+const width = Math.max(LEFT + RIGHT + shown * MIN_DX, 640);
+const height = TOP + data.lanes.length * LANE_H + 16;
+const xOf = pos => LEFT + (shown === 1 ? (width - LEFT - RIGHT) / 2
+                     : (pos - 1) * (width - LEFT - RIGHT) / (shown - 1));
+const posOf = new Map(data.events.map(e => [e.id, e.pos]));
+const evById = new Map(data.events.map(e => [e.id, e]));
+
+const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+svg.setAttribute('width', width);
+svg.setAttribute('height', height);
+const NS = 'http://www.w3.org/2000/svg';
+const el = (tag, attrs) => {
+  const n = document.createElementNS(NS, tag);
+  for (const [k, v] of Object.entries(attrs)) n.setAttribute(k, v);
+  return n;
+};
+
+for (const lane of data.lanes) {
+  const y = laneY.get(lane.node);
+  svg.append(el('line', {x1: 8, y1: y, x2: width - 8, y2: y, class: 'lane-line'}));
+  const label = el('text', {x: 8, y: y + 4, class: 'lane-label'});
+  label.textContent = `${lane.node} (首个 #${lane.first_pos})`;
+  svg.append(label);
+}
+
+// ③ 因果连线：方向同全序，from → to（画在点下面，先画线）
+for (const e of data.edges) {
+  const a = evById.get(e.from), b = evById.get(e.to);
+  if (!a || !b) continue;
+  const x1 = xOf(a.pos), y1 = laneY.get(a.node);
+  const x2 = xOf(b.pos), y2 = laneY.get(b.node);
+  const mx = (x1 + x2) / 2;
+  svg.append(el('path', {
+    d: `M ${x1} ${y1} C ${mx} ${y1}, ${mx} ${y2}, ${x2} ${y2}`,
+    class: 'edge',
+  }));
+  // 箭头
+  const ah = el('path', {d: `M ${x2 - 6} ${y2 - 4} L ${x2} ${y2} L ${x2 - 6} ${y2 + 4}`,
+                         class: 'edge'});
+  svg.append(ah);
+}
+
+// 事件点 + pos 标注
+const tip = document.getElementById('tip');
+for (const ev of data.events) {
+  const cx = xOf(ev.pos), cy = laneY.get(ev.node);
+  const dot = el('circle', {cx, cy, r: 7, class: 'dot', fill: laneColor.get(ev.node)});
+  const clock = ev.clock.map(([n, c]) => `${n}:${c}`).join(', ');
+  dot.addEventListener('mousemove', e => {
+    tip.style.display = 'block';
+    tip.style.left = e.clientX + 12 + 'px';
+    tip.style.top = e.clientY + 12 + 'px';
+    tip.textContent = `#${ev.pos} ${ev.id} @ ${ev.node}\nwall ${ev.wall}\n${clock}`;
+  });
+  dot.addEventListener('mouseleave', () => tip.style.display = 'none');
+  svg.append(dot);
+  const t = el('text', {x: cx, y: cy - 12, class: 'pos-label'});
+  t.textContent = ev.pos;
+  svg.append(t);
+}
+
+document.getElementById('wrap').append(svg);
+
+// ④ 统计与不可比较对
+document.getElementById('stats').innerHTML =
+  `<span>事件总数 <b>${data.total}</b></span>` +
+  `<span>本次显示 <b>${data.shown}</b> / 条数上限 <b>${data.limit}</b></span>` +
+  `<span>可比较对 <b>${data.stats.comparable_pairs}</b></span>` +
+  `<span>不可比较对 <b>${data.stats.incomparable_pairs}</b></span>`;
+
+const incomp = document.getElementById('incomp');
+const head = document.createElement('div');
+head.textContent = `不可比较对（前 ${data.incomparable.length} 对，按全序位置）：`;
+incomp.append(head);
+for (const [a, b] of data.incomparable) {
+  const s = document.createElement('span');
+  s.textContent = `#${posOf.get(a)} ${a} ∥ #${posOf.get(b)} ${b}`;
+  incomp.append(s);
+}
+</script>
+</body>
+</html>
